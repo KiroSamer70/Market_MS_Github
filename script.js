@@ -309,7 +309,7 @@ function renderStockTable() {
     stockTableBody.innerHTML = '';
     
     if (stockItems.length === 0) {
-        stockTableBody.innerHTML = `<tr><td colspan="6" class="empty-table">No items in stock. Add some products!</td></tr>`;
+        stockTableBody.innerHTML = `<tr><td colspan="5" class="empty-table">No items in stock. Add some products!</td></tr>`;
         return;
     }
     
@@ -318,18 +318,6 @@ function renderStockTable() {
     
     stockItems.forEach((item, index) => {
         const row = document.createElement('tr');
-        
-        // Check if expiration date is close (within 5 days)
-        const expiryDate = new Date(item.expirationDate);
-        const today = new Date();
-        const daysToExpiry = Math.floor((expiryDate - today) / (1000 * 60 * 60 * 24));
-        
-        // Add warning classes
-        if (daysToExpiry <= 5 && daysToExpiry >= 0) {
-            row.classList.add('expiry-warning');
-        } else if (daysToExpiry < 0) {
-            row.classList.add('expired');
-        }
         
         // Add low stock warning
         if (item.amount <= 10) {
@@ -340,7 +328,6 @@ function renderStockTable() {
             <td>${item.name}</td>
             <td>${item.amount.toFixed(2)} ${item.amount <= 10 ? '<span class="low-stock-badge">Low Stock</span>' : ''}</td>
             <td>${item.unit}</td>
-            <td>${new Date(item.expirationDate).toLocaleDateString()} ${daysToExpiry <= 5 && daysToExpiry >= 0 ? '<span class="expiry-badge">Soon</span>' : ''} ${daysToExpiry < 0 ? '<span class="expired-badge">Expired</span>' : ''}</td>
             <td>${new Date(item.entryDate).toLocaleDateString()}</td>
             <td class="table-action-buttons">
                 <button class="action-btn action-btn-transfer transfer-btn" data-id="${index}"><i class="fas fa-arrow-right"></i> Transfer</button>
@@ -356,14 +343,6 @@ function renderStockTable() {
     // Check for low stock items and show alert
     const lowStockItems = checkLowStock();
     showLowStockAlert(lowStockItems);
-    
-    // Add fade-in animation to all rows
-    const rows = stockTableBody.querySelectorAll('tr');
-    rows.forEach((row, index) => {
-        setTimeout(() => {
-            row.style.opacity = "1";
-        }, index * 30);
-    });
     
     // Add event listeners
     addStockTableEventListeners();
@@ -409,7 +388,7 @@ function renderHallTable() {
     hallTableBody.innerHTML = '';
     
     if (hallItems.length === 0) {
-        hallTableBody.innerHTML = `<tr><td colspan="6" class="empty-table">No items in hall. Transfer some from stock!</td></tr>`;
+        hallTableBody.innerHTML = `<tr><td colspan="5" class="empty-table">No items in hall. Transfer some from stock!</td></tr>`;
         return;
     }
     
@@ -418,18 +397,6 @@ function renderHallTable() {
     
     hallItems.forEach((item, index) => {
         const row = document.createElement('tr');
-        
-        // Check if expiration date is close (within 5 days)
-        const expiryDate = new Date(item.expirationDate);
-        const today = new Date();
-        const daysToExpiry = Math.floor((expiryDate - today) / (1000 * 60 * 60 * 24));
-        
-        // Add warning classes
-        if (daysToExpiry <= 5 && daysToExpiry >= 0) {
-            row.classList.add('expiry-warning');
-        } else if (daysToExpiry < 0) {
-            row.classList.add('expired');
-        }
         
         // Add low stock warning
         if (item.amount <= 10) {
@@ -443,7 +410,6 @@ function renderHallTable() {
             <td>${item.name}</td>
             <td>${item.amount.toFixed(2)} ${item.amount <= 10 ? '<span class="low-stock-badge">Low Stock</span>' : ''}</td>
             <td>${item.unit}</td>
-            <td>${new Date(item.expirationDate).toLocaleDateString()} ${daysToExpiry <= 5 && daysToExpiry >= 0 ? '<span class="expiry-badge">Soon</span>' : ''} ${daysToExpiry < 0 ? '<span class="expired-badge">Expired</span>' : ''}</td>
             <td>${new Date(entryDate).toLocaleDateString()}</td>
             <td class="table-action-buttons">
                 <button class="action-btn action-btn-sell sell-btn" data-id="${index}"><i class="fas fa-cash-register"></i> Sell</button>
@@ -511,14 +477,12 @@ function handleAddStock(e) {
     const name = document.getElementById('productName').value;
     const amount = parseFloat(document.getElementById('amount').value);
     const unit = document.getElementById('unit').value;
-    const expirationDate = document.getElementById('expirationDate').value;
     
     const newItem = {
         id: generateId(),
         name,
         amount,
         unit,
-        expirationDate,
         entryDate: new Date().toISOString()
     };
     
@@ -575,8 +539,7 @@ function handleTransferToHall(e) {
     // Check if the item already exists in the hall
     const existingHallItemIndex = hallItems.findIndex(item => 
         item.name === stockItem.name && 
-        item.unit === stockItem.unit &&
-        item.expirationDate === stockItem.expirationDate
+        item.unit === stockItem.unit
     );
     
     if (existingHallItemIndex !== -1) {
@@ -589,7 +552,6 @@ function handleTransferToHall(e) {
             name: stockItem.name,
             amount: transferAmount,
             unit: stockItem.unit,
-            expirationDate: stockItem.expirationDate,
             entryDate: new Date().toISOString()
         };
         hallItems.push(hallItem);
@@ -631,7 +593,6 @@ function handleSellProduct(e) {
         name: hallItem.name,
         amount: sellAmount,
         unit: hallItem.unit,
-        expirationDate: hallItem.expirationDate,
         soldDate: new Date().toISOString()
     };
     
@@ -674,8 +635,7 @@ function handleReturnToStock(e) {
     // Check if the item already exists in the stock
     const existingStockItemIndex = stockItems.findIndex(item => 
         item.name === hallItem.name && 
-        item.unit === hallItem.unit &&
-        item.expirationDate === hallItem.expirationDate
+        item.unit === hallItem.unit
     );
     
     if (existingStockItemIndex !== -1) {
@@ -688,7 +648,6 @@ function handleReturnToStock(e) {
             name: hallItem.name,
             amount: returnAmount,
             unit: hallItem.unit,
-            expirationDate: hallItem.expirationDate,
             entryDate: new Date().toISOString()
         };
         stockItems.push(stockItem);
