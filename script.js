@@ -250,6 +250,60 @@ function debounce(func, wait) {
     };
 }
 
+// Function to check for low stock items
+function checkLowStock() {
+    const lowStockThreshold = 10;
+    const lowStockItems = [];
+    
+    // Check stock items
+    stockItems.forEach(item => {
+        if (item.amount <= lowStockThreshold) {
+            lowStockItems.push({
+                name: item.name,
+                amount: item.amount,
+                unit: item.unit,
+                location: 'stock'
+            });
+        }
+    });
+    
+    // Check hall items
+    hallItems.forEach(item => {
+        if (item.amount <= lowStockThreshold) {
+            lowStockItems.push({
+                name: item.name,
+                amount: item.amount,
+                unit: item.unit,
+                location: 'hall'
+            });
+        }
+    });
+    
+    return lowStockItems;
+}
+
+// Function to show low stock alert
+function showLowStockAlert(items) {
+    if (items.length === 0) return;
+    
+    const alertContainer = document.createElement('div');
+    alertContainer.className = 'alert-notification';
+    
+    let message = '<i class="fas fa-exclamation-triangle"></i> Low Stock Alert:<br>';
+    items.forEach(item => {
+        message += `• ${item.name}: ${item.amount} ${item.unit} remaining in ${item.location}<br>`;
+    });
+    
+    alertContainer.innerHTML = message;
+    document.body.appendChild(alertContainer);
+    
+    // Remove alert after 5 seconds
+    setTimeout(() => {
+        alertContainer.style.animation = 'slideOut 0.5s ease-out forwards';
+        setTimeout(() => alertContainer.remove(), 500);
+    }, 5000);
+}
+
 // Render the stock table with dynamic height
 function renderStockTable() {
     stockTableBody.innerHTML = '';
@@ -270,16 +324,21 @@ function renderStockTable() {
         const today = new Date();
         const daysToExpiry = Math.floor((expiryDate - today) / (1000 * 60 * 60 * 24));
         
-        // Add warning class if close to expiry
+        // Add warning classes
         if (daysToExpiry <= 5 && daysToExpiry >= 0) {
             row.classList.add('expiry-warning');
         } else if (daysToExpiry < 0) {
             row.classList.add('expired');
         }
         
+        // Add low stock warning
+        if (item.amount <= 10) {
+            row.classList.add('low-stock');
+        }
+        
         row.innerHTML = `
             <td>${item.name}</td>
-            <td>${item.amount.toFixed(2)}</td>
+            <td>${item.amount.toFixed(2)} ${item.amount <= 10 ? '<span class="low-stock-badge">Low Stock</span>' : ''}</td>
             <td>${item.unit}</td>
             <td>${new Date(item.expirationDate).toLocaleDateString()} ${daysToExpiry <= 5 && daysToExpiry >= 0 ? '<span class="expiry-badge">Soon</span>' : ''} ${daysToExpiry < 0 ? '<span class="expired-badge">Expired</span>' : ''}</td>
             <td>${new Date(item.entryDate).toLocaleDateString()}</td>
@@ -293,6 +352,10 @@ function renderStockTable() {
     });
     
     stockTableBody.appendChild(fragment);
+    
+    // Check for low stock items and show alert
+    const lowStockItems = checkLowStock();
+    showLowStockAlert(lowStockItems);
     
     // Add fade-in animation to all rows
     const rows = stockTableBody.querySelectorAll('tr');
@@ -361,11 +424,16 @@ function renderHallTable() {
         const today = new Date();
         const daysToExpiry = Math.floor((expiryDate - today) / (1000 * 60 * 60 * 24));
         
-        // Add warning class if close to expiry
+        // Add warning classes
         if (daysToExpiry <= 5 && daysToExpiry >= 0) {
             row.classList.add('expiry-warning');
         } else if (daysToExpiry < 0) {
             row.classList.add('expired');
+        }
+        
+        // Add low stock warning
+        if (item.amount <= 10) {
+            row.classList.add('low-stock');
         }
         
         // For hall items, we'll use the transfer date as the entry date if it exists
@@ -373,7 +441,7 @@ function renderHallTable() {
         
         row.innerHTML = `
             <td>${item.name}</td>
-            <td>${item.amount.toFixed(2)}</td>
+            <td>${item.amount.toFixed(2)} ${item.amount <= 10 ? '<span class="low-stock-badge">Low Stock</span>' : ''}</td>
             <td>${item.unit}</td>
             <td>${new Date(item.expirationDate).toLocaleDateString()} ${daysToExpiry <= 5 && daysToExpiry >= 0 ? '<span class="expiry-badge">Soon</span>' : ''} ${daysToExpiry < 0 ? '<span class="expired-badge">Expired</span>' : ''}</td>
             <td>${new Date(entryDate).toLocaleDateString()}</td>
