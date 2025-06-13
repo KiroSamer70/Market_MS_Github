@@ -19,8 +19,9 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-store"></i>Supermarket Management</h1>
-            <p class="tagline">Efficiently manage stock and hall inventory with modern crystal interface</p>
+            <p class="tagline">Efficiently manage stock and hall inventory</p>
         </header>
+        <button id="clearAllDataBtn" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Clear All Data</button>
         
         <div class="main-content">
             <div class="section stock-section" data-aos="fade-up">
@@ -35,7 +36,6 @@
                                 <th>Product Name</th>
                                 <th>Amount</th>
                                 <th>Unit</th>
-                                <th>Entry Date</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -58,7 +58,6 @@
                                 <th>Product Name</th>
                                 <th>Amount</th>
                                 <th>Unit</th>
-                                <th>Entry Date</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -73,16 +72,22 @@
                 <h2><i class="fas fa-chart-pie"></i> Statistics</h2>
                 <div class="statistics-container">
                     <div class="stat-item">
-                        <h3><i class="fas fa-boxes"></i> Total Stock Items</h3>
-                        <p id="totalStockItems">0</p>
+                        <h3><i class="fas fa-boxes"></i> Total Stock Items (Number)</h3>
+                        <p id="totalStockItemsNumber" class="stat-value">0</p>
+                        <h3><i class="fas fa-boxes"></i> Total Stock Items (KG)</h3>
+                        <p id="totalStockItemsKG" class="stat-value">0.00</p>
                     </div>
                     <div class="stat-item">
-                        <h3><i class="fas fa-shopping-basket"></i> Total Hall Items</h3>
-                        <p id="totalHallItems">0</p>
+                        <h3><i class="fas fa-shopping-basket"></i> Total Hall Items (Number)</h3>
+                        <p id="totalHallItemsNumber" class="stat-value">0</p>
+                        <h3><i class="fas fa-shopping-basket"></i> Total Hall Items (KG)</h3>
+                        <p id="totalHallItemsKG" class="stat-value">0.00</p>
                     </div>
                     <div class="stat-item">
-                        <h3><i class="fas fa-cash-register"></i> Items Sold Today</h3>
-                        <p id="itemsSoldToday">0</p>
+                        <h3><i class="fas fa-cash-register"></i> Items Sold Today (Number)</h3>
+                        <p id="itemsSoldTodayNumber" class="stat-value">0</p>
+                        <h3><i class="fas fa-cash-register"></i> Items Sold Today (KG)</h3>
+                        <p id="itemsSoldTodayKG" class="stat-value">0.00</p>
                     </div>
                 </div>
             </div>

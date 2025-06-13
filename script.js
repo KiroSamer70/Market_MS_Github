@@ -7,9 +7,12 @@ let todaySoldCount = 0;
 // DOM Elements
 const stockTableBody = document.getElementById('stockTableBody');
 const hallTableBody = document.getElementById('hallTableBody');
-const totalStockItemsEl = document.getElementById('totalStockItems');
-const totalHallItemsEl = document.getElementById('totalHallItems');
-const itemsSoldTodayEl = document.getElementById('itemsSoldToday');
+const totalStockItemsNumberEl = document.getElementById('totalStockItemsNumber');
+const totalStockItemsKGEl = document.getElementById('totalStockItemsKG');
+const totalHallItemsNumberEl = document.getElementById('totalHallItemsNumber');
+const totalHallItemsKGEl = document.getElementById('totalHallItemsKG');
+const itemsSoldTodayNumberEl = document.getElementById('itemsSoldTodayNumber');
+const itemsSoldTodayKGEl = document.getElementById('itemsSoldTodayKG');
 const stockSection = document.querySelector('.stock-section');
 
 // Modal elements
@@ -28,6 +31,7 @@ const increaseStockForm = document.getElementById('increaseStockForm');
 
 // Button elements
 const addStockBtn = document.getElementById('addStockBtn');
+const clearAllDataBtn = document.getElementById('clearAllDataBtn');
 
 // Close buttons
 const closeButtons = document.querySelectorAll('.close');
@@ -239,6 +243,9 @@ function setupEventListeners() {
     window.addEventListener('resize', debounce(function() {
         equalizeTableContainers();
     }, 250));
+    
+    // Clear All Data button
+    clearAllDataBtn.addEventListener('click', handleClearAllData);
 }
 
 // Debounce function to prevent excessive function calls
@@ -328,7 +335,6 @@ function renderStockTable() {
             <td>${item.name}</td>
             <td>${item.amount.toFixed(2)} ${item.amount <= 10 ? '<span class="low-stock-badge">Low Stock</span>' : ''}</td>
             <td>${item.unit}</td>
-            <td>${new Date(item.entryDate).toLocaleDateString()}</td>
             <td class="table-action-buttons">
                 <button class="action-btn action-btn-transfer transfer-btn" data-id="${index}"><i class="fas fa-arrow-right"></i> Transfer</button>
                 <button class="action-btn action-btn-increase increase-btn" data-id="${index}"><i class="fas fa-plus"></i> Increase</button>
@@ -403,14 +409,10 @@ function renderHallTable() {
             row.classList.add('low-stock');
         }
         
-        // For hall items, we'll use the transfer date as the entry date if it exists
-        const entryDate = item.entryDate || new Date().toISOString();
-        
         row.innerHTML = `
             <td>${item.name}</td>
             <td>${item.amount.toFixed(2)} ${item.amount <= 10 ? '<span class="low-stock-badge">Low Stock</span>' : ''}</td>
             <td>${item.unit}</td>
-            <td>${new Date(entryDate).toLocaleDateString()}</td>
             <td class="table-action-buttons">
                 <button class="action-btn action-btn-sell sell-btn" data-id="${index}"><i class="fas fa-cash-register"></i> Sell</button>
                 <button class="action-btn action-btn-return return-btn" data-id="${index}"><i class="fas fa-undo"></i> Return</button>
@@ -482,8 +484,7 @@ function handleAddStock(e) {
         id: generateId(),
         name,
         amount,
-        unit,
-        entryDate: new Date().toISOString()
+        unit
     };
     
     // Add with animation
@@ -551,8 +552,7 @@ function handleTransferToHall(e) {
             id: generateId(),
             name: stockItem.name,
             amount: transferAmount,
-            unit: stockItem.unit,
-            entryDate: new Date().toISOString()
+            unit: stockItem.unit
         };
         hallItems.push(hallItem);
     }
@@ -647,8 +647,7 @@ function handleReturnToStock(e) {
             id: generateId(),
             name: hallItem.name,
             amount: returnAmount,
-            unit: hallItem.unit,
-            entryDate: new Date().toISOString()
+            unit: hallItem.unit
         };
         stockItems.push(stockItem);
     }
@@ -671,12 +670,37 @@ function handleReturnToStock(e) {
 
 // Update statistics with animated counting effect
 function updateStatistics() {
-    const totalStock = stockItems.reduce((total, item) => total + item.amount, 0);
-    const totalHall = hallItems.reduce((total, item) => total + item.amount, 0);
+    let totalStockNumber = 0;
+    let totalStockKG = 0;
+    stockItems.forEach(item => {
+        if (item.unit === 'Number') {
+            totalStockNumber += item.amount;
+        } else if (item.unit === 'KG') {
+            totalStockKG += item.amount;
+        }
+    });
     
-    animateCounter(totalStockItemsEl, totalStock);
-    animateCounter(totalHallItemsEl, totalHall);
-    animateCounter(itemsSoldTodayEl, todaySoldCount);
+    let totalHallNumber = 0;
+    let totalHallKG = 0;
+    hallItems.forEach(item => {
+        if (item.unit === 'Number') {
+            totalHallNumber += item.amount;
+        } else if (item.unit === 'KG') {
+            totalHallKG += item.amount;
+        }
+    });
+
+    totalStockItemsNumberEl.textContent = totalStockNumber;
+    totalStockItemsKGEl.textContent = totalStockKG.toFixed(2);
+    totalHallItemsNumberEl.textContent = totalHallNumber;
+    totalHallItemsKGEl.textContent = totalHallKG.toFixed(2);
+    
+    animateCounter(totalStockItemsNumberEl, totalStockNumber);
+    animateCounter(totalStockItemsKGEl, totalStockKG);
+    animateCounter(totalHallItemsNumberEl, totalHallNumber);
+    animateCounter(totalHallItemsKGEl, totalHallKG);
+
+    calculateTodaySoldItems(); // Call this here to update sold items too
 }
 
 // Counter animation for statistics
@@ -709,13 +733,25 @@ function animateCounter(element, targetValue) {
 // Calculate items sold today
 function calculateTodaySoldItems() {
     const today = new Date().toLocaleDateString();
-    
-    todaySoldCount = soldItems.reduce((total, item) => {
+    let soldNumberToday = 0;
+    let soldKGToday = 0;
+
+    soldItems.forEach(item => {
         const soldDate = new Date(item.soldDate).toLocaleDateString();
-        return soldDate === today ? total + item.amount : total;
-    }, 0);
+        if (soldDate === today) {
+            if (item.unit === 'Number') {
+                soldNumberToday += item.amount;
+            } else if (item.unit === 'KG') {
+                soldKGToday += item.amount;
+            }
+        }
+    });
     
-    animateCounter(itemsSoldTodayEl, todaySoldCount);
+    itemsSoldTodayNumberEl.textContent = soldNumberToday;
+    itemsSoldTodayKGEl.textContent = soldKGToday.toFixed(2);
+
+    animateCounter(itemsSoldTodayNumberEl, soldNumberToday);
+    animateCounter(itemsSoldTodayKGEl, soldKGToday);
 }
 
 // Play sound effects
@@ -857,6 +893,26 @@ function equalizeTableContainers() {
             stockContainer.style.height = stockCalculatedHeight + 'px';
             hallContainer.style.height = hallCalculatedHeight + 'px';
         }, 50); // Small delay to ensure DOM is ready
+    }
+}
+
+// Function to clear all data from tables and statistics
+function handleClearAllData() {
+    if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+        stockItems = [];
+        hallItems = [];
+        soldItems = [];
+        todaySoldCount = 0;
+        
+        saveToLocalStorage();
+        renderStockTable();
+        renderHallTable();
+        updateStatistics();
+        calculateTodaySoldItems();
+        
+        showToast('<i class="fas fa-check-circle"></i> All data cleared successfully!', 'success');
+    } else {
+        showToast('<i class="fas fa-info-circle"></i> Data clearing cancelled.', 'info');
     }
 }
 
